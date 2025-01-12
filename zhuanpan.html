@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>今天吃什么?</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            /* 修改背景图片路径为相对路径 */
+            background-image: url('./background.jpg');
+            background-size: cover;
+            font-family: Arial, sans-serif;
+        }
+        
+        #wheel {
+            position: relative;
+            width: 400px;
+            height: 400px;
+        }
+        
+        #canvas {
+            border-radius: 50%;
+        }
+        
+        #pointer {
+            position: absolute;
+            top: 50px;
+            left: 195px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 20px solid red;
+            transform-origin: 50% 0;
+            z-index: 1;
+        }
+        
+        #spin-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: white;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        #spin-button:hover {
+            background-color: #f0f0f0;
+        }
+
+        #result {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="result"></div>
+    <div id="wheel">
+        <canvas id="canvas" width="400" height="400"></canvas>
+        <div id="pointer"></div>
+    </div>
+    <button id="spin-button">转动</button>
+
+    <script>
+        // 定义菜品和颜色的映射关系
+        const foodMap = [
+            { name: "冒菜", color: "#FFB5C2" },
+            { name: "老麻抄手", color: "#97D2FB" },
+            { name: "螺蛳粉", color: "#FFE5A5" },
+            { name: "饭堂", color: "#C5FAD5" },
+            { name: "羊肉汤", color: "#FFCCF9" },
+            { name: "饺子", color: "#AFF8DB" },
+            { name: "港式茶餐厅", color: "#FFC8A2" }
+        ];
+        
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const resultDiv = document.getElementById('result');
+        let currentAngle = 0;
+        let isSpinning = false;
+        
+        function drawWheel() {
+            ctx.clearRect(0, 0, 400, 400);
+            
+            const centerX = 200;
+            const centerY = 200;
+            const radius = 150;
+            const sliceAngle = (Math.PI * 2) / foodMap.length;
+            
+            for (let i = 0; i < foodMap.length; i++) {
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, 
+                       i * sliceAngle + currentAngle,
+                       (i + 1) * sliceAngle + currentAngle);
+                ctx.closePath();
+                
+                ctx.fillStyle = foodMap[i].color;
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(i * sliceAngle + sliceAngle / 2 + currentAngle);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 16px Arial';
+                ctx.fillText(foodMap[i].name, radius * 0.7, 0);
+                ctx.restore();
+            }
+        }
+        
+        function spin() {
+            if (isSpinning) return;
+            
+            isSpinning = true;
+            resultDiv.style.display = 'none';
+            let speed = Math.random() * 0.2 + 0.1;
+            let slowdown = 0.99;
+            let totalRotation = Math.random() * 2 * Math.PI + 4 * Math.PI;
+            
+            function animate() {
+                currentAngle += speed;
+                totalRotation -= speed;
+                speed *= slowdown;
+                
+                drawWheel();
+                
+                if (totalRotation > 0 && speed > 0.001) {
+                    requestAnimationFrame(animate);
+                } else {
+                    isSpinning = false;
+                    const finalAngle = -(currentAngle % (Math.PI * 2)); // 取负值使方向一致
+                    const sliceAngle = (Math.PI * 2) / foodMap.length;
+                    const selectedIndex = Math.floor((finalAngle + sliceAngle/2) / sliceAngle) % foodMap.length;
+                    resultDiv.textContent = `今天吃：${foodMap[selectedIndex].name}`;
+                    resultDiv.style.display = 'block';
+                }
+            }
+            
+            animate();
+        }
+        
+        document.getElementById('spin-button').addEventListener('click', spin);
+        drawWheel();
+    </script>
+</body>
+</html>
