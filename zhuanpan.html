@@ -1,0 +1,140 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>今天吃什么?</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-image: url('background.jpg');
+            background-size: cover;
+            font-family: Arial, sans-serif;
+        }
+        
+        #wheel {
+            position: relative;
+            width: 400px;
+            height: 400px;
+        }
+        
+        #canvas {
+            border-radius: 50%;
+        }
+        
+        #pointer {
+            position: absolute;
+            top: 50px;
+            left: 195px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 20px solid red;
+            transform-origin: 50% 0;
+            z-index: 1;
+        }
+        
+        #spin-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: white;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        #spin-button:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div id="wheel">
+        <canvas id="canvas" width="400" height="400"></canvas>
+        <div id="pointer"></div>
+    </div>
+    <button id="spin-button">转动</button>
+
+    <script>
+        const options = ["冒菜", "老麻抄手", "螺蛳粉", "饭堂", "羊肉汤", "饺子", "港式茶餐厅"];
+        const colors = ["#FFB5C2", "#97D2FB", "#FFE5A5", "#C5FAD5", "#FFCCF9", "#AFF8DB", "#FFC8A2"];
+        
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let currentAngle = 0;
+        let isSpinning = false;
+        
+        function drawWheel() {
+            ctx.clearRect(0, 0, 400, 400);
+            
+            const centerX = 200;
+            const centerY = 200;
+            const radius = 150;
+            const sliceAngle = (Math.PI * 2) / options.length;
+            
+            for (let i = 0; i < options.length; i++) {
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, 
+                       i * sliceAngle + currentAngle,
+                       (i + 1) * sliceAngle + currentAngle);
+                ctx.closePath();
+                
+                ctx.fillStyle = colors[i];
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(i * sliceAngle + sliceAngle / 2 + currentAngle);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = 'black';
+                ctx.font = 'bold 16px Arial';
+                ctx.fillText(options[i], radius * 0.7, 0);
+                ctx.restore();
+            }
+        }
+        
+        function spin() {
+            if (isSpinning) return;
+            
+            isSpinning = true;
+            let speed = Math.random() * 0.2 + 0.1;
+            let slowdown = 0.99;
+            let totalRotation = Math.random() * 2 * Math.PI + 4 * Math.PI;
+            
+            function animate() {
+                currentAngle += speed;
+                totalRotation -= speed;
+                speed *= slowdown;
+                
+                drawWheel();
+                
+                if (totalRotation > 0 && speed > 0.001) {
+                    requestAnimationFrame(animate);
+                } else {
+                    isSpinning = false;
+                    const finalAngle = currentAngle % (Math.PI * 2);
+                    const sliceAngle = (Math.PI * 2) / options.length;
+                    const selectedIndex = Math.floor((-finalAngle / sliceAngle) % options.length);
+                    alert(`今天吃：${options[selectedIndex]}`);
+                }
+            }
+            
+            animate();
+        }
+        
+        document.getElementById('spin-button').addEventListener('click', spin);
+        drawWheel();
+    </script>
+</body>
+</html>
