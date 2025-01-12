@@ -21,16 +21,16 @@ class LunchSpinner:
         result = self.options[final_index]
         return result
 
-@app.route('/')
+@app.route("/")
 def home():
-    return app.send_static_file('index.html')
+    return app.send_static_file("index.html")
 
-@app.route('/run-spinner', methods=['POST'])
+@app.route("/run-spinner", methods=["POST"])
 def run_spinner():
     spinner = LunchSpinner()
     result = spinner.spin()
     return f"今天吃：{result}"
 
 if __name__ == "__main__":
-    app.static_folder = 'c:/Users/Administrator/Desktop/webpages'
+    app.static_folder = "c:/Users/Administrator/Desktop/webpages"
     app.run(port=5000)
