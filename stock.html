@@ -1,183 +1,248 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>实时行情</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+            background-color: #f0f2f5;
+            padding: 24px;
+        }
+
+        .container {
             max-width: 800px;
             margin: 0 auto;
-            padding: 20px;
         }
-        .container {
-            background: #f5f5f5;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
+
+        .header {
+            margin-bottom: 24px;
         }
-        .price-item {
-            margin: 10px 0;
-            padding: 10px;
+
+        .header h1 {
+            color: rgba(0, 0, 0, 0.85);
+            font-weight: 600;
+            font-size: 28px;
+        }
+
+        .market-data {
             background: white;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: rgba(0, 0, 0, 0.85);
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .data-item {
+            padding: 12px;
+            border: 1px solid #f0f0f0;
             border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .up {
-            color: #ff4d4f;
+
+        .item-name {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.65);
+            margin-bottom: 4px;
         }
-        .down {
+
+        .item-value {
+            font-size: 16px;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.85);
+        }
+
+        .item-change {
+            font-size: 14px;
+            margin-left: 8px;
+        }
+
+        .positive {
             color: #52c41a;
         }
-        #updateTime {
-            color: #666;
-            font-size: 0.9em;
+
+        .negative {
+            color: #f5222d;
         }
-        .error-message {
-            color: #ff4d4f;
-            padding: 10px;
-            background: #fff2f0;
-            border: 1px solid #ffccc7;
+
+        .update-time {
+            text-align: right;
+            color: rgba(0, 0, 0, 0.45);
+            font-size: 14px;
+            margin-top: 16px;
+        }
+
+        .refresh-btn {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
             border-radius: 4px;
-            margin: 10px 0;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .refresh-btn:hover {
+            background: #40a9ff;
         }
     </style>
 </head>
 <body>
-    <h1>实时市场行情</h1>
-    <div id="updateTime"></div>
-    <div id="errorMessage" class="error-message" style="display:none;">数据加载失败: 网络错误</div>
-    
     <div class="container">
-        <h2>黄金价格</h2>
-        <div id="goldPriceUSD" class="price-item">加载中...</div>
-        <div id="goldPriceCNY" class="price-item">加载中...</div>
-    </div>
+        <header class="header">
+            <h1>实时行情</h1>
+        </header>
 
-    <div class="container">
-        <h2>股票指数</h2>
-        <div id="sh000001" class="price-item">加载中...</div>
-        <div id="sz399001" class="price-item">加载中...</div>
-        <div id="sz399006" class="price-item">加载中...</div>
-        <div id="ndx" class="price-item">加载中...</div>
-    </div>
+        <button class="refresh-btn" onclick="refreshData()">刷新数据</button>
 
-    <div class="container">
-        <h2>汇率</h2>
-        <div id="usdcny" class="price-item">加载中...</div>
+        <div class="market-data">
+            <div class="section-title">黄金价格</div>
+            <div class="data-grid" id="gold-data">
+                <div class="data-item">
+                    <div class="item-name">美元/盎司</div>
+                    <div class="item-value">--</div>
+                </div>
+                <div class="data-item">
+                    <div class="item-name">人民币/克</div>
+                    <div class="item-value">--</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="market-data">
+            <div class="section-title">股票指数</div>
+            <div class="data-grid" id="stock-data">
+                <div class="data-item">
+                    <div class="item-name">上证指数</div>
+                    <div class="item-value">--</div>
+                </div>
+                <div class="data-item">
+                    <div class="item-name">深证成指</div>
+                    <div class="item-value">--</div>
+                </div>
+                <div class="data-item">
+                    <div class="item-name">创业板指</div>
+                    <div class="item-value">--</div>
+                </div>
+                <div class="data-item">
+                    <div class="item-name">纳斯达克</div>
+                    <div class="item-value">--</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="market-data">
+            <div class="section-title">汇率</div>
+            <div class="data-grid" id="exchange-data">
+                <div class="data-item">
+                    <div class="item-name">美元/人民币</div>
+                    <div class="item-value">--</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="update-time" id="update-time"></div>
     </div>
 
     <script>
-        function formatNumber(num) {
-            return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        function updateValue(value, change) {
+            const changeClass = change >= 0 ? 'positive' : 'negative';
+            const changeSign = change >= 0 ? '+' : '';
+            return `${value}<span class="item-change ${changeClass}">${changeSign}${change}%</span>`;
         }
 
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-            setTimeout(() => {
-                errorDiv.style.display = 'none';
-            }, 5000); // 5秒后隐藏错误信息
+        async function fetchData(url) {
+            const headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            };
+            const response = await fetch(url);
+            return await response.json();
         }
 
-        async function fetchWithTimeout(url, timeout = 5000) {
+        async function refreshData() {
             try {
-                const controller = new AbortController();
-                const id = setTimeout(() => controller.abort(), timeout);
-                const response = await fetch(url, {
-                    signal: controller.signal,
-                    headers: {
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-                    }
-                });
-                clearTimeout(id);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return await response.json();
-            } catch (error) {
-                if (error.name === 'AbortError') {
-                    throw new Error('请求超时');
-                }
-                throw error;
-            }
-        }
-
-        async function updateData() {
-            try {
-                // 更新时间
-                document.getElementById('updateTime').textContent = 
-                    `最后更新时间：${new Date().toLocaleString()}`;
-
                 // 获取黄金价格
-                try {
-                    const goldUSD = await fetchWithTimeout("http://push2.eastmoney.com/api/qt/stock/get?secid=101.GC00Y&fields=f43,f44,f45,f46,f47,f169,f170");
-                    const price = goldUSD.data.f43 / 100;
-                    const change = goldUSD.data.f170 / 100;
-                    document.getElementById('goldPriceUSD').innerHTML = 
-                        `黄金价格: ${price} 美元/盎司 <span class="${change >= 0 ? 'up' : 'down'}">(${change >= 0 ? '+' : ''}${change.toFixed(2)}%)</span>`;
-                } catch (error) {
-                    document.getElementById('goldPriceUSD').textContent = '数据加载失败';
-                    showError('获取美元黄金价格失败: ' + error.message);
+                const goldUsdData = await fetchData("http://push2.eastmoney.com/api/qt/stock/get?secid=101.GC00Y&fields=f43,f44,f45,f46,f47,f169,f170");
+                const goldCnyData = await fetchData("http://push2.eastmoney.com/api/qt/stock/get?secid=113.aum&fields=f43,f44,f45,f46,f47,f169,f170");
+                
+                const goldItems = document.getElementById('gold-data').children;
+                if (goldUsdData.data) {
+                    goldItems[0].querySelector('.item-value').innerHTML = updateValue(
+                        (goldUsdData.data.f43 / 100).toFixed(2),
+                        (goldUsdData.data.f170 / 100).toFixed(2)
+                    );
                 }
-
-                try {
-                    const goldCNY = await fetchWithTimeout("http://push2.eastmoney.com/api/qt/stock/get?secid=113.aum&fields=f43,f44,f45,f46,f47,f169,f170");
-                    const price = goldCNY.data.f43 / 100;
-                    const change = goldCNY.data.f170 / 100;
-                    document.getElementById('goldPriceCNY').innerHTML = 
-                        `黄金价格: ${price} 元/克 <span class="${change >= 0 ? 'up' : 'down'}">(${change >= 0 ? '+' : ''}${change.toFixed(2)}%)</span>`;
-                } catch (error) {
-                    document.getElementById('goldPriceCNY').textContent = '数据加载失败';
-                    showError('获取人民币黄金价格失败: ' + error.message);
+                if (goldCnyData.data) {
+                    goldItems[1].querySelector('.item-value').innerHTML = updateValue(
+                        (goldCnyData.data.f43 / 100).toFixed(2),
+                        (goldCnyData.data.f170 / 100).toFixed(2)
+                    );
                 }
 
                 // 获取股票指数
                 const indices = {
-                    "sh000001": ["1.000001", "上证指数"],
-                    "sz399001": ["0.399001", "深证成指"],
-                    "sz399006": ["0.399006", "创业板指"],
-                    "ndx": ["100.NDX", "纳斯达克"]
+                    "上证指数": "1.000001",
+                    "深证成指": "0.399001",
+                    "创业板指": "0.399006",
+                    "纳斯达克": "100.NDX"
                 };
 
-                for (const [id, [code, name]] of Object.entries(indices)) {
-                    try {
-                        const data = await fetchWithTimeout(`http://push2.eastmoney.com/api/qt/stock/get?secid=${code}&fields=f43,f44,f45,f46,f47,f169,f170`);
-                        const price = data.data.f43 / 100;
-                        const change = data.data.f170 / 100;
-                        document.getElementById(id).innerHTML = 
-                            `${name}: ${formatNumber(price)} <span class="${change >= 0 ? 'up' : 'down'}">(${change >= 0 ? '+' : ''}${change.toFixed(2)}%)</span>`;
-                    } catch (error) {
-                        document.getElementById(id).textContent = `${name}: 数据加载失败`;
-                        showError(`获取${name}数据失败: ` + error.message);
+                const stockItems = document.getElementById('stock-data').children;
+                let i = 0;
+                for (const [name, code] of Object.entries(indices)) {
+                    const data = await fetchData(`http://push2.eastmoney.com/api/qt/stock/get?secid=${code}&fields=f43,f44,f45,f46,f47,f169,f170`);
+                    if (data.data) {
+                        stockItems[i].querySelector('.item-value').innerHTML = updateValue(
+                            (data.data.f43 / 100).toFixed(2),
+                            (data.data.f170 / 100).toFixed(2)
+                        );
                     }
-                    await new Promise(resolve => setTimeout(resolve, 500)); // 添加延时避免请求过快
+                    i++;
+                    await new Promise(resolve => setTimeout(resolve, 500));
                 }
 
                 // 获取汇率
-                try {
-                    const exchangeRate = await fetchWithTimeout("http://push2.eastmoney.com/api/qt/stock/get?secid=133.USDCNH&fields=f43,f44,f45,f46,f47,f169,f170");
-                    const rate = exchangeRate.data.f43 / 10000;
-                    const change = exchangeRate.data.f170 / 100;
-                    document.getElementById('usdcny').innerHTML = 
-                        `美元兑人民币汇率: ${rate.toFixed(4)} <span class="${change >= 0 ? 'up' : 'down'}">(${change >= 0 ? '+' : ''}${change.toFixed(2)}%)</span>`;
-                } catch (error) {
-                    document.getElementById('usdcny').textContent = '汇率数据加载失败';
-                    showError('获取汇率数据失败: ' + error.message);
+                const exchangeData = await fetchData("http://push2.eastmoney.com/api/qt/stock/get?secid=133.USDCNH&fields=f43,f44,f45,f46,f47,f169,f170");
+                const exchangeItems = document.getElementById('exchange-data').children;
+                if (exchangeData.data) {
+                    exchangeItems[0].querySelector('.item-value').innerHTML = updateValue(
+                        (exchangeData.data.f43 / 10000).toFixed(3),
+                        (exchangeData.data.f170 / 100).toFixed(2)
+                    );
                 }
 
+                // 更新时间
+                document.getElementById('update-time').textContent = `更新时间：${new Date().toLocaleString()}`;
             } catch (error) {
-                showError('数据加载失败: ' + error.message);
+                console.error('获取数据失败:', error);
             }
         }
 
-        // 初始更新
-        updateData();
-        // 每30秒更新一次数据
-        setInterval(updateData, 30000);
+        // 页面加载时获取数据
+        refreshData();
+
+        // 每60秒自动刷新一次
+        setInterval(refreshData, 60000);
     </script>
 </body>
 </html>
-
